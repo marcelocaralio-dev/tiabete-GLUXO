@@ -20,7 +20,8 @@ console.log('AndroidManifest.xml ajustado.');
 const g = path.join(__dirname, '..', 'android', 'app', 'build.gradle');
 if (fs.existsSync(g)) {
   const pkg = require('../package.json');
-  const code = parseInt(process.env.GITHUB_RUN_NUMBER || '1', 10) || 1;
+  const runNumber = parseInt(process.env.GITHUB_RUN_NUMBER || '1', 10) || 1;
+const code = 40 + runNumber;
   let t = fs.readFileSync(g, 'utf8');
   t = t.replace(/versionCode\s+\d+/, 'versionCode ' + code).replace(/versionName\s+"[^"]*"/, 'versionName "' + pkg.version + '"');
   fs.writeFileSync(g, t);

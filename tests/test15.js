@@ -2,6 +2,7 @@
 // ligados ao Worker real sobre SQLite e a um "Google" de mentira. Sem rede, sem chaves reais. TBROOT=<pasta> roda contra outra versão.
 process.removeAllListeners('warning');
 const fs = require('fs'), vm = require('vm'), path = require('path');
+const { pathToFileURL } = require('url');
 const ROOT = process.env.TBROOT || path.join(__dirname, '..');
 const { DatabaseSync } = require('node:sqlite');
 const core = require(ROOT + '/src/licensecore.js');
@@ -19,7 +20,7 @@ function d1() {
   const CID = 'cliente-teste.apps.googleusercontent.com', T = { now: Date.UTC(2026, 10, 17, 12) };
   const idTok = async sub => { const h = b64u(new TextEncoder().encode(JSON.stringify({ alg: 'RS256', kid: 'k1' }))), p = b64u(new TextEncoder().encode(JSON.stringify({ iss: 'https://accounts.google.com', aud: CID, sub, email: sub + '@x.com', name: 'Teste', exp: Math.floor((T.now + H) / 1000) }))); return `${h}.${p}.${b64u(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', g.privateKey, new TextEncoder().encode(h + '.' + p)))}`; };
   const fetchStub = async url => url.includes('oauth2/v3/certs') ? new Response(JSON.stringify({ keys: [gJwk] })) : new Response('{}', { status: 500 });
-  const { createApp } = await import(ROOT + '/worker/src/index.js');
+  const { createApp } = await import(pathToFileURL(path.join(ROOT, 'worker', 'src', 'index.js')).href);
   const db = d1(), env = { DB: db, GOOGLE_CLIENT_ID: CID, PUBLIC_URL: 'https://w.test', MP_ACCESS_TOKEN: 't', MP_WEBHOOK_SECRET: 's', LICENSE_PRIVATE_JWK: JSON.stringify(privJwk) };
   const app = createApp({ fetch: fetchStub, now: () => T.now });
   const call = (m, p, body, auth, e) => app(new Request('https://w.test' + p, { method: m, headers: Object.assign({ 'content-type': 'application/json' }, auth ? { authorization: auth } : {}), body: JSON.stringify(body || {}) }), e || env);
